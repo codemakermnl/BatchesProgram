@@ -5,6 +5,7 @@ import com.program.batches.exception.InvalidRowException;
 import com.program.batches.exception.RowFullException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BatchProcessor {
 
@@ -80,10 +81,10 @@ public class BatchProcessor {
     }
 
     public List<java.lang.String> getState() {
+
         for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
             final StringBuilder exitPlanString = new StringBuilder();
             if( isStackUsed() ) {
-
                 while( !rows.get( rowNumber ).isEmpty() ) {
                     exitPlanString.append( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
                 }
@@ -113,6 +114,8 @@ public class BatchProcessor {
         return highest;
     }
 
+
+
     public List<java.lang.String> getExitPlan() {
         int highestNumberOfSeats = getHighestNumberOfSeats();
 //        System.out.println("highestNumberOfSeats: " + highestNumberOfSeats  + "\nRows: " + rows.size());
@@ -124,79 +127,202 @@ public class BatchProcessor {
         }
 
 //        System.out.println( "exit: " + batchDTO.getExit() +  ", left exit? " + batchDTO.isLeftExit());
-        if( batchDTO.isLeftExit() ) {
-            for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
-                List<Character> transferList = new ArrayList<>();
-                if( isStackUsed() ) {
-                    while( !rows.get( rowNumber ).isEmpty() ) {
-                        transferList.add( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
+        if( batchDTO.isLeftEntrance() ) {
+            if( batchDTO.isLeftExit() ) {
+                for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
+                    List<Character> transferList = new ArrayList<>();
+                    if( isStackUsed() ) {
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
+                        }
+
+                    }else{
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((LinkedList<Character>) rows.get( rowNumber ) ).poll() );
+                        }
                     }
-                    Collections.reverse(transferList);
-                }else{
-                    while( !rows.get( rowNumber ).isEmpty() ) {
-                        transferList.add( ((LinkedList<Character>) rows.get( rowNumber ) ).poll() );
+
+                    for( int i = 0; i < transferList.size(); i++ ) {
+                        customerMatrix[rowNumber][i] = transferList.get(i);
                     }
                 }
 
-                for( int i = 0; i < transferList.size(); i++ ) {
-                    customerMatrix[rowNumber][i] = transferList.get(i);
+                for(int i = 0; i < highestNumberOfSeats; i++) {
+                    final StringBuilder exitPlanString = new StringBuilder();
+                    for(int j = 0; j < rows.size(); j++) {
+                        if( customerMatrix[j][i] != '0' ) {
+                            exitPlanString.append( customerMatrix[j][i] );
+                        }
+                    }
+                    exitPlan.add( exitPlanString.toString() );
                 }
-            }
+            }else  {
+                for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
+                    List<Character> transferList = new ArrayList<>();
+                    if( isStackUsed() ) {
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
+                        }
 
-//            for(int i = 0; i < customerMatrix.length; i++) {
-//                for(int j = 0; j < customerMatrix[i].length; j++) {
-//                    System.out.print( customerMatrix[i][j] + " " );
-//                }
-//                System.out.println();
-//            }
+                    }else{
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((LinkedList<Character>) rows.get( rowNumber ) ).poll() );
+                        }
+                    }
 
-            for(int i = 0; i < highestNumberOfSeats; i++) {
-                final StringBuilder exitPlanString = new StringBuilder();
-                for(int j = 0; j < rows.size(); j++) {
-//                    System.out.println("i: " + i + ", j: " + j);
-                    if( customerMatrix[j][i] != '0' ) {
-                        exitPlanString.append( customerMatrix[j][i] );
+                    for( int i = 0; i < transferList.size(); i++ ) {
+                        customerMatrix[rowNumber][i] = transferList.get(i);
                     }
                 }
-                exitPlan.add( exitPlanString.toString() );
+
+                for(int i = 0; i < highestNumberOfSeats; i++) {
+                    final StringBuilder exitPlanString = new StringBuilder();
+                    for(int j = 0; j < rows.size(); j++) {
+                        if( customerMatrix[j][i] != '0' ) {
+                            exitPlanString.append( customerMatrix[j][i] );
+                        }
+                    }
+                    exitPlan.add( exitPlanString.toString() );
+                }
             }
         }else{
-            for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
-                List<Character> transferList = new ArrayList<>();
-//                System.out.println( "rowNumber " + rowNumber + " size: " + rows.get( rowNumber ).size());
-                if( isStackUsed() ) {
-                    while( !rows.get( rowNumber ).isEmpty() ) {
-                        transferList.add( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
+            if( batchDTO.isLeftExit() ) {
+                for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
+                    List<Character> transferList = new ArrayList<>();
+                    if( isStackUsed() ) {
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
+                        }
+                        Collections.reverse(transferList);
+                    }else{
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((LinkedList<Character>) rows.get( rowNumber ) ).poll() );
+                        }
                     }
-                    Collections.reverse(transferList);
-                }else{
-                    while( !rows.get( rowNumber ).isEmpty() ) {
-                        transferList.add( ((LinkedList<Character>) rows.get( rowNumber ) ).poll() );
-                    }
-                }
-//                System.out.println("transfer: " + transferList);
-                int ctr = highestNumberOfSeats - 1;
-                for( int i = transferList.size()-1; i >= 0; i-- ) {
-//                    System.out.println("(rowNumber: " + rowNumber + ", i: " + i + ") => " + transferList.get(i));
-                    customerMatrix[rowNumber][ctr] = transferList.get(i);
-                    ctr--;
-                }
-            }
 
-            for(int i = highestNumberOfSeats - 1; i >= 0; i--) {
-                final StringBuilder exitPlanString = new StringBuilder();
-                for(int j = 0; j < rows.size(); j++) {
-//                    System.out.println("j: " + j + ", i: " + i);
-                   if( customerMatrix[j][i] != '0' ) {
-                       exitPlanString.append( customerMatrix[j][i] );
-                   }
+                    for( int i = 0; i < transferList.size(); i++ ) {
+                        customerMatrix[rowNumber][i] = transferList.get(i);
+                    }
                 }
-                exitPlan.add( exitPlanString.toString() );
+
+                for(int i = 0; i < highestNumberOfSeats; i++) {
+                    final StringBuilder exitPlanString = new StringBuilder();
+                    for(int j = 0; j < rows.size(); j++) {
+                        if( customerMatrix[j][i] != '0' ) {
+                            exitPlanString.append( customerMatrix[j][i] );
+                        }
+                    }
+                    exitPlan.add( exitPlanString.toString() );
+                }
+            }else {
+                for(int rowNumber = 0; rowNumber < rows.size(); rowNumber++) {
+                    List<Character> transferList = new ArrayList<>();
+                    if( isStackUsed() ) {
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((Stack<Character>) rows.get( rowNumber ) ).pop() );
+                        }
+
+                    }else{
+                        while( !rows.get( rowNumber ).isEmpty() ) {
+                            transferList.add( ((LinkedList<Character>) rows.get( rowNumber ) ).poll() );
+                        }
+                    }
+
+                    for( int i = 0; i < transferList.size(); i++ ) {
+                        customerMatrix[rowNumber][i] = transferList.get(i);
+                    }
+                }
+
+                for(int i = 0; i < highestNumberOfSeats; i++) {
+                    final StringBuilder exitPlanString = new StringBuilder();
+                    for(int j = 0; j < rows.size(); j++) {
+                        if( customerMatrix[j][i] != '0' ) {
+                            exitPlanString.append( customerMatrix[j][i] );
+                        }
+                    }
+                    exitPlan.add( exitPlanString.toString() );
+                }
             }
         }
 
+        System.out.println("Cinema Layout: ");
+        if( batchDTO.isLeftEntrance() ) {
+            if( batchDTO.isLeftExit() ) {
+                printMatrixLeftLeft(customerMatrix, highestNumberOfSeats);
+            }else {
+                printMatrixLeftRight(customerMatrix, highestNumberOfSeats);
+            }
+        }else {
+            if( batchDTO.isLeftExit() ) {
+                printMatrixRightLeft(customerMatrix, highestNumberOfSeats);
+            }else {
+                printMatrixRightRight(customerMatrix, highestNumberOfSeats);
+            }
+        }
 
-
+        System.out.println("\nExit Plan: ");
         return exitPlan;
+    }
+
+    private void printMatrixRightLeft(char[][] customerMatrix, int highestNumberOfSeats) {
+        for( char[] rows : customerMatrix ) {
+            List<String> rowSeat = (String.valueOf(rows)).chars().mapToObj(c -> {
+                char x = (char) c;
+                return x+"";
+            }).filter(c -> !c.equals("0")).collect(Collectors.toList());
+
+            for(int i = rowSeat.size() ; i < highestNumberOfSeats; i++) {
+                rowSeat.add("_");
+            }
+
+            System.out.println("[ " + String.join(" ", rowSeat) + " ]");
+        }
+    }
+
+    private void printMatrixLeftLeft(char[][] customerMatrix, int highestNumberOfSeats) {
+        for( char[] rows : customerMatrix ) {
+            List<String> rowSeat = (String.valueOf(rows)).chars().mapToObj(c -> {
+                char x = (char) c;
+                return x+"";
+            }).filter(c -> !c.equals("0")).collect(Collectors.toList());
+            for(int i = rowSeat.size() ; i < highestNumberOfSeats; i++) {
+                rowSeat.add(0,"_");
+            }
+
+            System.out.println("[ " + String.join(" ", rowSeat) + " ]");
+        }
+    }
+
+    private void printMatrixLeftRight(char[][] customerMatrix, int highestNumberOfSeats) {
+        for( char[] rows : customerMatrix ) {
+            List<String> rowSeat = (String.valueOf(rows)).chars().mapToObj(c -> {
+                char x = (char) c;
+                return x+"";
+            }).filter(c -> !c.equals("0")).collect(Collectors.toList());
+
+            Collections.reverse(rowSeat);
+
+            for(int i = rowSeat.size() ; i < highestNumberOfSeats; i++) {
+                rowSeat.add(0,"_");
+            }
+
+            System.out.println("[ " + String.join(" ", rowSeat) + " ]");
+        }
+    }
+
+    private void printMatrixRightRight(char[][] customerMatrix, int highestNumberOfSeats) {
+        for( char[] rows : customerMatrix ) {
+            List<String> rowSeat = (String.valueOf(rows)).chars().mapToObj(c -> {
+                char x = (char) c;
+                return x+"";
+            }).filter(c -> !c.equals("0")).collect(Collectors.toList());
+
+            Collections.reverse(rowSeat);
+            for(int i = rowSeat.size() ; i < highestNumberOfSeats; i++) {
+                rowSeat.add("_");
+            }
+
+            System.out.println("[ " + String.join(" ", rowSeat) + " ]");
+        }
     }
 }

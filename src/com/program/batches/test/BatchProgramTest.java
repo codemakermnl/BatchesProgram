@@ -27,7 +27,7 @@ public class BatchProgramTest {
         batchProcessor.addToSeat( 'B', 3 );
 
 //        System.out.println( batchProcessor.getState() );
-        System.out.println("Exit Plan: ");
         System.out.println( String.join("\n", batchProcessor.getExitPlan()) );
+//        System.out.println(batchProcessor.getState());
     }
 }

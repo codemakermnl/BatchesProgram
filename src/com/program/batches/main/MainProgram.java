@@ -71,7 +71,7 @@ public class MainProgram {
     }
 
     public static void printExitPlan(BatchProcessor processor) {
-        System.out.println("Exit Plan: ");
+
         System.out.println( String.join("\n", processor.getExitPlan()) );
     }
 
